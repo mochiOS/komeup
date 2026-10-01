@@ -11,6 +11,7 @@ const KOMEC_RELEASE_API: &str = "https://api.github.com/repos/mochiOS/komec/rele
 const KOMEUP_RELEASE_API: &str = "https://api.github.com/repos/mochiOS/komeup/releases/latest";
 const TOOLCHAINS_RELEASE_API: &str =
     "https://api.github.com/repos/mochiOS/toolchains/releases/latest";
+const DEVKIT_RELEASE_API: &str = "https://api.github.com/repos/mochiOS/devkit/releases/latest";
 
 #[derive(Debug, Deserialize)]
 struct Release {
@@ -43,6 +44,7 @@ pub fn install() -> Result<(), String> {
     let komec_release = fetch_release(&client, KOMEC_RELEASE_API)?;
     let komeup_release = fetch_release(&client, KOMEUP_RELEASE_API)?;
     let toolchains_release = fetch_release(&client, TOOLCHAINS_RELEASE_API)?;
+    let devkit_release = fetch_release(&client, DEVKIT_RELEASE_API)?;
 
     let mut archives = vec![
         download_and_verify(
@@ -69,6 +71,13 @@ pub fn install() -> Result<(), String> {
         &toolchain_name,
     )?);
 
+    let appcore_version = devkit_release.tag_name.trim_start_matches('v');
+    let appcore = download_and_verify(
+        &client,
+        &devkit_release,
+        &format!("{arch}-appcore-{appcore_version}.zst"),
+    )?;
+
     let home = kome_home()?;
 
     fs::create_dir_all(&home)
@@ -78,6 +87,13 @@ pub fn install() -> Result<(), String> {
         extract_archive(&archive.data, &home)
             .map_err(|error| format!("failed to install {}: {error}", archive.name))?;
     }
+
+    let appcore_home = home.join("appcore");
+    fs::create_dir_all(&appcore_home)
+        .map_err(|error| format!("failed to create {}: {error}", appcore_home.display()))?;
+
+    extract_archive(&appcore.data, &appcore_home)
+        .map_err(|error| format!("failed to install {}: {error}", appcore.name))?;
 
     println!("Installed Kome to {}", home.display());
 
