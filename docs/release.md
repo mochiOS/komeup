@@ -9,6 +9,7 @@ Kome と mochiOS Toolchain は GitHub Releases から配布します。
 - `mochiOS/komec`
 - `mochiOS/komeup`
 - `mochiOS/toolchains`
+- `mochiOS/devkit`
 
 ## Kome
 
@@ -46,6 +47,19 @@ SHA256SUMS
 - `sdk/lib/libmochi_user_newlib_runtime.a`
 - `sdk/lib/libgcc.a`
 - `sdk/sysroot/`
+
+## AppCore
+
+`mochiOS/devkit` は AppCore を配布します。
+
+```text
+{arch}-appcore-{version}.zst
+SHA256SUMS
+```
+
+`version` は GitHub Release のタグから先頭の `v` を除いた値を使用します。
+
+AppCore は `~/.kome/appcore/`、または `KOME_HOME/appcore/` に展開します。
 
 ## インストール先
 
