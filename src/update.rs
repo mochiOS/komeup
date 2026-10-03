@@ -1,5 +1,5 @@
 use crate::install;
 
-pub fn update() -> Result<(), String> {
-    install::install()
+pub fn update(version: &str) -> Result<(), String> {
+    install::install(version)
 }

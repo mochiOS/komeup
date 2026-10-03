@@ -1,82 +1,83 @@
-# リリース形式
+# SDKリリース
 
-Kome と mochiOS Toolchain は GitHub Releases から配布します。
+Kome SDKは同じSDK版を持つ複数のGitHub Releaseから構成します。最初のSDK版は`27.0-dp.1`です。
 
 ## 配布元
 
-`komeup install` は以下のReleaseを使用します。
+- `mochiOS/komec`: `kome`、`komec`、`kome-lsp`、実行環境、標準ライブラリ
+- `mochiOS/komeup`: インストーラー
+- `mochiOS/toolchains`: mochiOS向けクロスツールチェーン
+- `mochiOS/ViewKit`: ViewKitのKome APIと共有ライブラリ
+- `mochiOS/devkit`: AppCoreのKome APIと共有・静的ライブラリ
 
-- `mochiOS/komec`
-- `mochiOS/komeup`
-- `mochiOS/toolchains`
-- `mochiOS/devkit`
+すべてのリポジトリで同じタグ`27.0-dp.1`を使用します。`komeup`はlatestではなく、このタグを直接取得します。
 
-## Kome
+## 成果物
 
-`mochiOS/komec` は Kome 本体、Komeコンパイラ、runtime、標準ライブラリを配布します。
+`mochiOS/komec`:
 
 ```text
-{arch}-kome-{platform}.tar.zst
-{arch}-kome-std-{platform}.tar.zst
+x86_64-kome-27.0-dp.1.tar.zst
+x86_64-komec-27.0-dp.1.tar.zst
+x86_64-kome-std-27.0-dp.1.tar.zst
 SHA256SUMS
 ```
 
-`{arch}-kome-{platform}.tar.zst` には `kome`、`komec` と必要なruntimeを含めます。
-
-標準ライブラリは `{arch}-kome-std-{platform}.tar.zst` として分離します。
-
-## komeup
-
-`mochiOS/komeup` は komeup 自身を配布します。
+その他のリポジトリ:
 
 ```text
-{arch}-komeup-{platform}.tar.zst
-SHA256SUMS
+x86_64-komeup-27.0-dp.1.tar.zst
+x86_64-mochios-toolchain-27.0-dp.1.tar.zst
+x86_64-viewkit-27.0-dp.1.tar.zst
+x86_64-appcore-27.0-dp.1.tar.zst
 ```
 
-## mochiOS Toolchain
+各Releaseには、そのRelease内の全アーカイブを列挙した`SHA256SUMS`を添付します。
 
-`mochiOS/toolchains` は mochiOS 向けクロスツールチェーンとSDKを配布します。
-
-アーカイブには最低限以下を含めます。
-
-- `bin/{arch}-mochios-clang`
-- `bin/{arch}-mochios-ld`
-- `sdk/lib/crt0.o`
-- `sdk/lib/linker.ld`
-- `sdk/lib/libmochi_user_newlib_runtime.a`
-- `sdk/lib/libgcc.a`
-- `sdk/sysroot/`
-
-## AppCore
-
-`mochiOS/devkit` は AppCore を配布します。
+## インストール配置
 
 ```text
-{arch}-appcore-{version}.zst
-SHA256SUMS
+~/.kome/
+├── bin/
+│   ├── kome
+│   ├── komec
+│   ├── kome-lsp
+│   ├── komeup
+│   └── libkome_native_rt.a
+├── stdlib/
+├── viewkit/
+├── appcore/
+├── sdk/
+└── sdk-version
 ```
 
-`version` は GitHub Release のタグから先頭の `v` を除いた値を使用します。
+`komeup`は全成果物を取得して検証した後、一時ディレクトリへ展開し、SDK全体を一括で置き換えます。
 
-AppCore は `~/.kome/appcore/`、または `KOME_HOME/appcore/` に展開します。
+## 作成手順
 
-## インストール先
+1. 各リポジトリの作業ツリーをクリーンにし、テストを完走させます。
+2. Kome、ViewKit、AppCore、komeup、ツールチェーンの成果物を`27.0-dp.1`で生成します。
+3. 各リポジトリに`27.0-dp.1`の下書きReleaseを作り、成果物と`SHA256SUMS`を添付します。
+4. ViewKit、AppCore、ツールチェーン、Kome、komeupの順でReleaseを公開します。
+5. 空の`KOME_HOME`を指定してインストール試験を行います。
 
-標準のインストール先は `~/.kome/` です。
-
-`KOME_HOME` が設定されている場合は、そのディレクトリを使用します。
-
-各アーカイブは `KOME_HOME` へ直接展開できる構造にします。
-
-## Checksums
-
-各Releaseには `SHA256SUMS` を必ず添付します。
-
-```text
-<sha256>  <archive name>
+```sh
+KOME_HOME=/tmp/kome-sdk-test ./target/release/komeup install 27.0-dp.1
+/tmp/kome-sdk-test/bin/kome check --manifest-path /path/to/project/Kome.toml
 ```
 
-`komeup` はすべてのアーカイブを展開前にSHA-256で検証します。
+6. JIT実行、AOTビルド、生成バイナリ実行、`kome-lsp`起動を確認します。
+7. インストール用スクリプトを確認します。
 
-checksumが一致しない、または対象ファイルが `SHA256SUMS` に存在しない場合はインストールを中止します。
+```sh
+KOME_SDK_VERSION=27.0-dp.1 sh install.sh
+```
+
+## 更新と削除
+
+```sh
+komeup update 27.0-dp.1
+komeup uninstall
+```
+
+版を省略した場合は、その`komeup`が既定として持つSDK版を使用します。

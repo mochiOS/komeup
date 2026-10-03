@@ -24,8 +24,8 @@ fn run() -> Result<(), String> {
     };
 
     match command.as_str() {
-        "install" => install::install(),
-        "update" => update::update(),
+        "install" => install::install(&optional_version(&mut args)?),
+        "update" => update::update(&optional_version(&mut args)?),
         "uninstall" => install::uninstall(),
 
         "version" | "--version" | "-V" => {
@@ -42,13 +42,23 @@ fn run() -> Result<(), String> {
     }
 }
 
+fn optional_version(args: &mut impl Iterator<Item = String>) -> Result<String, String> {
+    let version = args
+        .next()
+        .unwrap_or_else(|| install::DEFAULT_SDK_VERSION.to_owned());
+    if let Some(argument) = args.next() {
+        return Err(format!("unexpected argument: `{argument}`"));
+    }
+    Ok(version)
+}
+
 fn print_help() {
     println!(
         "komeup
 
 Usage:
-\tkomeup install
-\tkomeup update
+\tkomeup install [SDK version]
+\tkomeup update [SDK version]
 \tkomeup uninstall
 \tkomeup version"
     );
